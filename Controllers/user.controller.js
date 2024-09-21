@@ -11,17 +11,17 @@ export const register = async (req, res) => {
         const userExists = await Users.findOne({ email });
 
         if (userExists) {
-            return res.status(400).json({ message: 'User already exists' });
+            return res.status(400).json({ status: 'error', message: 'User already exists' });
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
         const newUser = new Users({ email, password: hashedPassword });
         await newUser.save();
 
-        res.status(201).json({ message: 'User registered successfully' });
+        res.status(201).json({ status: 'success', message: 'User registered successfully' });
     } catch (error) {
-        console.log(error);
-        res.status(500).json({ message: 'Server error' });
+        console.error('Registration error:', error);
+        res.status(500).json({ status: 'error', message: 'Server error' });
     }
 };
 
@@ -33,19 +33,19 @@ export const login = async (req, res) => {
         const user = await Users.findOne({ email });
 
         if (!user) {
-            return res.status(404).json({ message: 'User not found' });
+            return res.status(404).json({ status: 'error', message: 'User not found' });
         }
 
         const isMatch = await bcrypt.compare(password, user.password);
 
         if (!isMatch) {
-            return res.status(400).json({ message: 'Invalid credentials' });
+            return res.status(401).json({ status: 'error', message: 'Invalid credentials' });
         }
 
-        res.status(200).json({ message: 'Login successful' });
+        res.status(200).json({ status: 'success', message: 'Login successful' });
     } catch (error) {
-        console.log(error);
-        res.status(500).json({ message: 'Server error' });
+        console.error('Login error:', error);
+        res.status(500).json({ status: 'error', message: 'Server error' });
     }
 };
 
@@ -57,7 +57,7 @@ export const forgotPassword = async (req, res) => {
         const user = await Users.findOne({ email });
 
         if (!user) {
-            return res.status(404).json({ message: 'User not found' });
+            return res.status(404).json({ status: 'error', message: 'User not found' });
         }
 
         const verificationString = randomString.generate(20);
@@ -65,11 +65,11 @@ export const forgotPassword = async (req, res) => {
         user.expiryTime = Date.now() + 600000;  // 10 minutes
         await user.save();
 
-        mail(email, verificationString);
-        res.status(200).json({ message: 'Password reset link sent' });
+        await mail(email, verificationString);
+        res.status(200).json({ status: 'success', message: 'Password reset link sent' });
     } catch (error) {
-        console.log(error);
-        res.status(500).json({ message: 'Server error' });
+        console.error('Forgot password error:', error);
+        res.status(500).json({ status: 'error', message: 'Server error' });
     }
 };
 
@@ -81,13 +81,13 @@ export const verifyString = async (req, res) => {
         const user = await Users.findOne({ verificationString });
 
         if (!user || user.expiryTime < Date.now()) {
-            return res.status(400).json({ message: 'Invalid or expired reset link' });
+            return res.status(400).json({ status: 'error', message: 'Invalid or expired reset link' });
         }
 
-        res.status(200).json({ message: 'Valid reset link' });
+        res.status(200).json({ status: 'success', message: 'Valid reset link' });
     } catch (error) {
-        console.log(error);
-        res.status(500).json({ message: 'Server error' });
+        console.error('Verify string error:', error);
+        res.status(500).json({ status: 'error', message: 'Server error' });
     }
 };
 
@@ -99,7 +99,7 @@ export const changePassword = async (req, res) => {
         const user = await Users.findOne({ verificationString });
 
         if (!user || user.expiryTime < Date.now()) {
-            return res.status(400).json({ message: 'Invalid or expired reset link' });
+            return res.status(400).json({ status: 'error', message: 'Invalid or expired reset link' });
         }
 
         const hashedPassword = await bcrypt.hash(newPassword, 10);
@@ -108,9 +108,9 @@ export const changePassword = async (req, res) => {
         user.expiryTime = null;
         await user.save();
 
-        res.status(200).json({ message: 'Password changed successfully' });
+        res.status(200).json({ status: 'success', message: 'Password changed successfully' });
     } catch (error) {
-        console.log(error);
-        res.status(500).json({ message: 'Server error' });
+        console.error('Change password error:', error);
+        res.status(500).json({ status: 'error', message: 'Server error' });
     }
 };

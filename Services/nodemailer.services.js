@@ -1,33 +1,34 @@
 import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
 
-dotenv.config();
+dotenv.config(); // Load environment variables from .env
 
-const mail = (receiverEmail, verificationString) => {
-    const transporter = nodemailer.createTransport({
-        service: 'gmail',
-        auth: {
-            user: process.env.EMAIL,  // Your Gmail address
-            pass: process.env.PASSWORD // Your Gmail password or app password
-        }
-    });
+// Create a transporter object using the SMTP transport
+const transporter = nodemailer.createTransport({
+    service: 'gmail', // You can use other services like 'Outlook', 'Yahoo', etc.
+    auth: {
+        user: process.env.EMAIL, // Your email address
+        pass: process.env.PASSWORD, // Your email password
+    },
+});
 
-    const resetLink = `https://prem-user-management.netlify.app/resetpage/${verificationString}`;
-    
+// Function to send an email
+const sendEmail = async (to, subject, text, html) => {
     const mailOptions = {
-        from: process.env.EMAIL,
-        to: receiverEmail,
-        subject: 'Password Reset',
-        html: `<p>Click <a href="${resetLink}">here</a> to reset your password. The link is valid for 10 minutes.</p>`
+        from: process.env.EMAIL, // Sender address
+        to, // List of recipients
+        subject, // Subject line
+        text, // Plain text body
+        html, // HTML body
     };
 
-    transporter.sendMail(mailOptions, (error, info) => {
-        if (error) {
-            console.log("Email send error: ", error);
-        } else {
-            console.log("Email sent: " + info.response);
-        }
-    });
+    try {
+        const info = await transporter.sendMail(mailOptions);
+        console.log('Email sent: ' + info.response);
+    } catch (error) {
+        console.error('Error sending email:', error);
+        throw error; // Rethrow error for further handling if needed
+    }
 };
 
-export default mail;
+export default sendEmail;

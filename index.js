@@ -7,15 +7,20 @@ import userRoutes from './Routers/user.router.js';
 dotenv.config();
 const app = express();
 
-app.use(cors());
-app.use(express.json());
+// Middleware
+app.use(cors()); // Enable CORS for all routes
+app.use(express.json()); // Parse JSON request bodies
 
-connectDB();  // Connect to the database
+// Connect to the database
+connectDB();
 
+// API routes
 app.use('/api/user', userRoutes);
 
+// Set the port from the environment variables or use 5000 as default
 const PORT = process.env.PORT || 5000;
 
+// Start the server
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
